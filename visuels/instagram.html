@@ -1,0 +1,1224 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@alex.san.dre — Rennes → Bruxelles</title>
+  <style>
+    /* ============================================================
+       BASE
+    ============================================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --orange:  #E8521A;
+      --gold:    #FFD700;
+      --green:   #22C55E;
+      --red:     #EF4444;
+      --yellow:  #EAB308;
+      --orange2: #F97316;
+      --bg:      #080808;
+      --bg2:     #0d0d0d;
+      --dim:     #333;
+      --muted:   #555;
+      --subtle:  #222;
+      --line:    #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: #050505; color: white; }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(5,5,5,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #111;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 18px 28px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #444;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    nav a:hover { color: white; border-color: var(--orange); }
+    nav a .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ============================================================
+       ÉDITION INLINE
+    ============================================================ */
+    .edit-bar {
+      position: sticky;
+      top: 57px;
+      z-index: 99;
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      gap: 16px;
+    }
+    .edit-bar p {
+      font-size: 12px;
+      color: #333;
+      letter-spacing: 0.06em;
+    }
+    .edit-bar p strong { color: #555; font-weight: 500; }
+    #toggle-edit {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    #toggle-edit:hover { background: #222; color: #aaa; }
+    #toggle-edit.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+    }
+
+    body.editing [contenteditable] {
+      outline: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 3px;
+      cursor: text;
+    }
+    body.editing [contenteditable]:focus {
+      outline: 1px solid var(--orange);
+      background: rgba(232,82,26,0.04);
+      border-radius: 3px;
+    }
+    [contenteditable]:focus { outline: none; }
+    body:not(.editing) [contenteditable] { cursor: default; pointer-events: none; }
+
+    /* ============================================================
+       SECTION WRAPPERS
+    ============================================================ */
+    .section {
+      padding: 64px 0 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      border-bottom: 1px solid #0f0f0f;
+    }
+    .section-header {
+      text-align: center;
+      max-width: 760px;
+      padding: 0 24px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 10px;
+    }
+    .section-desc {
+      font-size: 14px;
+      color: #333;
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+    }
+    .section-desc strong { color: #555; font-weight: 500; }
+
+    .item-label {
+      font-size: 11px;
+      color: #222;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: -30px;
+    }
+
+    /* ============================================================
+       SHARED POST STYLES
+    ============================================================ */
+
+    /* 1:1 feed post */
+    .post {
+      width: 1080px;
+      height: 1080px;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      zoom: 0.42;
+    }
+
+    /* 9:16 story */
+    .story {
+      width: 1080px;
+      height: 1920px;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      zoom: 0.28;
+    }
+
+    /* ============================================================
+       ① POST ANNONCE
+    ============================================================ */
+    #annonce .post {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 88px 96px;
+    }
+    #annonce .post::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 600px 500px at 80% 15%, rgba(232,82,26,.09) 0%, transparent 65%),
+        radial-gradient(ellipse 400px 400px at 5% 95%, rgba(15,15,30,.8) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .ann-label {
+      font-size: 17px; font-weight: 500;
+      letter-spacing: .25em; text-transform: uppercase;
+      color: var(--orange); margin-bottom: 28px;
+      position: relative; z-index: 1;
+    }
+    .ann-headline {
+      font-size: 108px; font-weight: 900;
+      line-height: .88; letter-spacing: -.03em;
+      color: white; position: relative; z-index: 1;
+    }
+    .ann-headline .o { color: var(--orange); }
+    .ann-map { position: relative; z-index: 1; }
+    .ann-stats {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 36px 0;
+      position: relative; z-index: 1;
+    }
+    .ann-stat { padding: 0 20px; }
+    .ann-stat:not(:last-child) { border-right: 1px solid var(--line); }
+    .ann-stat-val {
+      font-size: 62px; font-weight: 900;
+      line-height: 1; letter-spacing: -.02em;
+    }
+    .ann-stat-val sup { font-size: 28px; font-weight: 300; color: #444; vertical-align: super; }
+    .ann-stat-lbl {
+      font-size: 13px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .2em;
+      color: #444; margin-top: 6px;
+    }
+    .ann-bottom {
+      display: flex; justify-content: space-between;
+      align-items: flex-end;
+      position: relative; z-index: 1;
+    }
+    .ann-date { font-size: 22px; font-weight: 300; color: #444; letter-spacing: .12em; }
+    .ann-date strong { color: #777; font-weight: 500; }
+    .ann-handle { font-size: 17px; color: var(--dim); letter-spacing: .04em; }
+
+    /* ============================================================
+       ② STORIES
+    ============================================================ */
+    .story {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px 80px 80px;
+    }
+    .story .bg-blob {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
+    }
+    .st-bg-num {
+      position: absolute;
+      font-size: 220px; font-weight: 900;
+      line-height: .85; letter-spacing: -.04em;
+      color: white; opacity: .05;
+      right: -10px; top: 80px;
+      z-index: 0; pointer-events: none;
+    }
+    /* progress bars */`n    /* story body */
+    .st-body {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 50px 0;
+      position: relative; z-index: 5;
+    }
+    .st-day-label {
+      font-size: 16px; font-weight: 600;
+      letter-spacing: .28em; text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .st-route {
+      font-size: 32px; font-weight: 300;
+      color: rgba(255,255,255,.45); letter-spacing: .05em;
+      margin-bottom: 44px;
+    }
+    .st-route strong { color: white; font-weight: 700; }
+    .st-km {
+      font-size: 156px; font-weight: 900;
+      line-height: .9; letter-spacing: -.04em;
+      margin-bottom: 12px;
+    }
+    .st-km-unit { font-size: 52px; font-weight: 300; color: rgba(255,255,255,.3); }
+    .st-divider { width: 54px; height: 2px; margin: 44px 0; opacity: .35; }
+    .st-tagline {
+      font-size: 40px; font-weight: 300;
+      line-height: 1.35; color: rgba(255,255,255,.8);
+      max-width: 640px;
+    }
+    .st-tagline strong { font-weight: 700; color: white; }
+    /* story footer */
+    .st-foot { position: relative; z-index: 5; }
+    .st-progress { display: flex; gap: 10px; margin-bottom: 26px; }
+    .st-pdot {
+      width: 10px; height: 10px; border-radius: 5px;
+      background: rgba(255,255,255,.18);
+      transition: width .2s;
+    }
+    .st-pdot.done { background: rgba(255,255,255,.55); }
+    .st-pdot.now  { width: 26px; }
+    .st-loc { font-size: 20px; color: rgba(255,255,255,.28); letter-spacing: .08em; }
+    .st-loc strong { color: rgba(255,255,255,.45); font-weight: 500; }
+
+    /* per-story accent */
+    .s-j1 .bg-blob { background: radial-gradient(ellipse 800px 600px at 110% -10%, rgba(34,197,94,.12) 0%,transparent 60%); }
+    .s-j1 .st-day-label,.s-j1 .st-km { color: var(--green); }
+    .s-j1 .st-divider,.s-j1 .st-pdot.now { background: var(--green); }
+
+    .s-j2 .bg-blob { background: radial-gradient(ellipse 800px 600px at 110% -10%, rgba(239,68,68,.15) 0%,transparent 60%); }
+    .s-j2 .st-day-label,.s-j2 .st-km { color: var(--red); }
+    .s-j2 .st-divider,.s-j2 .st-pdot.now { background: var(--red); }
+
+    .s-j3 .bg-blob { background: radial-gradient(ellipse 800px 600px at 110% -10%, rgba(234,179,8,.12) 0%,transparent 60%); }
+    .s-j3 .st-day-label,.s-j3 .st-km { color: var(--yellow); }
+    .s-j3 .st-divider,.s-j3 .st-pdot.now { background: var(--yellow); }
+
+    .s-j4 .bg-blob { background: radial-gradient(ellipse 800px 600px at 110% -10%, rgba(249,115,22,.13) 0%,transparent 60%); }
+    .s-j4 .st-day-label,.s-j4 .st-km { color: var(--orange2); }
+    .s-j4 .st-divider,.s-j4 .st-pdot.now { background: var(--orange2); }
+
+    .s-j5 .bg-blob { background: radial-gradient(ellipse 900px 700px at 50% 40%, rgba(255,215,0,.1) 0%,transparent 65%); }
+    .s-j5 .st-day-label,.s-j5 .st-km { color: var(--gold); }
+    .s-j5 .st-divider,.s-j5 .st-pdot.now { background: var(--gold); }
+
+    /* ============================================================
+       ③ POSTS FEED
+    ============================================================ */
+    .feed-post {
+      width: 1080px; height: 1080px;
+      background: var(--bg);
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 90px 96px;
+      zoom: 0.42;
+    }
+    .feed-blob {
+      position: absolute;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      top: -150px; right: -150px;
+      opacity: .07; filter: blur(80px);
+      pointer-events: none;
+    }
+    .fd-badge {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 36px; position: relative; z-index: 1;
+    }
+    .fd-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .fd-day-txt {
+      font-size: 15px; font-weight: 500;
+      letter-spacing: .24em; text-transform: uppercase; color: #444;
+    }
+    .fd-route {
+      font-size: 26px; font-weight: 300;
+      color: #444; letter-spacing: .08em;
+      margin-bottom: 22px;
+      position: relative; z-index: 1;
+    }
+    .fd-route strong { color: #777; font-weight: 600; }
+    .fd-km {
+      font-size: 130px; font-weight: 900;
+      line-height: .88; letter-spacing: -.04em;
+      position: relative; z-index: 1;
+      color: white !important;
+    }
+    .fd-km .u { font-size: 46px; font-weight: 300; color: var(--dim); }
+    .fd-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 30px;
+      position: relative;
+      z-index: 1;
+    }
+    .fd-stat-item { display: flex; flex-direction: column; gap: 6px; }
+    .fd-stat-lbl {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: #2a2a2a;
+    }
+    .fd-stat-val {
+      font-size: 26px; font-weight: 300;
+      color: #555; letter-spacing: .02em;
+    }
+
+    .fd-divider { width: 48px; height: 2px; margin: 48px 0; opacity: .4; position: relative; z-index: 1; }
+    .fd-caption {
+      font-size: 35px; font-weight: 300;
+      line-height: 1.45; color: rgba(255,255,255,.65);
+      letter-spacing: -.01em; max-width: 700px;
+      position: relative; z-index: 1;
+    }
+    .fd-caption strong { color: white; font-weight: 600; }
+    .fd-caption em { font-style: normal; opacity: .4; }
+    .fd-bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      position: relative; z-index: 1;
+    }
+    .fd-loc { font-size: 18px; color: #2a2a2a; letter-spacing: .06em; }
+    .fd-loc strong { color: #444; font-weight: 500; }
+    .fd-handle { font-size: 15px; color: #1e1e1e; letter-spacing: .04em; }
+
+    .f-j1 .fd-km,.f-j1 .fd-dot,.f-j1 .feed-blob,.f-j1 .fd-divider { color:var(--green); background:var(--green); }
+    .f-j2 .fd-km,.f-j2 .fd-dot,.f-j2 .feed-blob,.f-j2 .fd-divider { color:var(--red);   background:var(--red);   }
+    .f-j3 .fd-km,.f-j3 .fd-dot,.f-j3 .feed-blob,.f-j3 .fd-divider { color:var(--yellow);background:var(--yellow);}
+    .f-j4 .fd-km,.f-j4 .fd-dot,.f-j4 .feed-blob,.f-j4 .fd-divider { color:var(--orange2);background:var(--orange2);}
+    .f-j5 .fd-km,.f-j5 .fd-dot,.f-j5 .feed-blob,.f-j5 .fd-divider { color:var(--gold);  background:var(--gold);  }
+
+    /* ============================================================
+       ④ POST ARRIVÉE
+    ============================================================ */
+    #arrivee .post {
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 80px 96px;
+    }
+    #arrivee .post::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 700px 500px at 50% 50%, rgba(255,215,0,.06) 0%,transparent 65%),
+        radial-gradient(ellipse 400px 300px at 80% 85%, rgba(255,140,0,.05) 0%,transparent 50%);
+      pointer-events: none;
+    }
+    .arr-label {
+      font-size: 15px; font-weight: 500;
+      letter-spacing: .3em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 32px;
+      display: flex; align-items: center; gap: 14px;
+      position: relative; z-index: 1;
+    }
+    .arr-label::before { content:''; width:36px; height:1px; background:var(--gold); opacity:.5; }
+    .arr-grid {
+      display: grid; grid-template-columns: repeat(2,1fr);
+      position: relative; z-index: 1;
+    }
+    .arr-stat { padding: 30px 0; }
+    .arr-stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .arr-stat:nth-child(odd)  { padding-right: 40px; }
+    .arr-stat:nth-child(even) { padding-left: 40px; border-left: 1px solid var(--line); }
+    .arr-val {
+      font-size: 78px; font-weight: 900;
+      line-height: .9; letter-spacing: -.03em;
+    }
+    .arr-val.gold { color: var(--gold); }
+    .arr-lbl {
+      font-size: 13px; font-weight: 500;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: #2e2e2e; margin-top: 10px;
+    }
+    .arr-divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg,transparent,var(--gold),transparent);
+      opacity: .18; margin: 38px 0;
+      position: relative; z-index: 1;
+    }
+    .arr-main {
+      font-size: 52px; font-weight: 900;
+      line-height: 1.0; letter-spacing: -.02em;
+      position: relative; z-index: 1;
+    }
+    .arr-main .dim  { color: #222; }
+    .arr-main .gold { color: var(--gold); }
+    .arr-sub {
+      font-size: 24px; font-weight: 300;
+      color: #333; margin-top: 24px;
+      position: relative; z-index: 1;
+    }
+    .arr-sub strong { color: #555; font-weight: 500; }
+    .arr-bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      position: relative; z-index: 1;
+    }
+    .arr-loc { font-size: 22px; color: #222; letter-spacing: .06em; }
+    .arr-loc strong { color: #3a3a3a; font-weight: 500; }
+    .arr-handle { font-size: 16px; color: #1a1a1a; letter-spacing: .04em; }
+
+    /* ============================================================
+       ⑤ CARROUSEL BILAN
+    ============================================================ */
+    .slide {
+      width: 1080px; height: 1080px;
+      background: var(--bg);
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 88px 96px;
+      zoom: 0.42;
+    }
+
+
+    /* slide 1 — cover */
+    #sc1 { justify-content: center; align-items: flex-start; }
+    #sc1::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 700px 600px at 100% 0%, rgba(232,82,26,.1) 0%,transparent 60%),
+        radial-gradient(ellipse 500px 500px at 0% 100%, rgba(255,215,0,.04) 0%,transparent 50%);
+    }
+    #sc1 .big-ghost {
+      position: absolute;
+      font-size: 280px; font-weight: 900;
+      line-height: .85; letter-spacing: -.05em;
+      color: rgba(255,255,255,.03);
+      right: -20px; top: 60px; pointer-events: none;
+    }
+    #sc1 .sc-content { position: relative; z-index: 1; }
+    .sc-tag {
+      font-size: 15px; font-weight: 500;
+      letter-spacing: .3em; text-transform: uppercase;
+      color: var(--orange); margin-bottom: 36px;
+    }
+    .sc-title {
+      font-size: 90px; font-weight: 900;
+      line-height: .88; letter-spacing: -.03em; color: white;
+    }
+    .sc-sub {
+      font-size: 28px; font-weight: 300;
+      color: #333; margin-top: 30px; letter-spacing: .06em;
+    }
+
+    /* slide 2 — carte */
+    #sc2 { justify-content: space-between; }
+    .sc-head {
+      font-size: 15px; font-weight: 600;
+      letter-spacing: .28em; text-transform: uppercase;
+      color: var(--orange); position: relative; z-index: 1;
+    }
+    .sc-map { flex:1; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+    .sc-foot { font-size: 17px; color: #222; letter-spacing: .06em; position: relative; z-index:1; }
+
+    /* slides 3-7 — jours */
+    .day-slide { justify-content: space-between; }
+    .ds-top { position: relative; z-index: 1; }
+    .ds-jnum {
+      font-size: 100px; font-weight: 900;
+      line-height: 1; letter-spacing: -.02em;
+      margin-bottom: 2px;
+    }
+    .ds-date {
+      font-size: 15px; font-weight: 400;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: #2e2e2e; margin-bottom: 30px;
+    }
+    .ds-route {
+      font-size: 48px; font-weight: 900;
+      line-height: 1; letter-spacing: -.02em; color: white;
+    }
+    .ds-km {
+      font-size: 118px; font-weight: 900;
+      letter-spacing: -.04em; line-height: .9; margin-top: 18px;
+    }
+    .ds-km span { font-size: 42px; font-weight: 300; color: #2a2a2a; }
+    .ds-phrase {
+      font-size: 30px; font-weight: 300;
+      color: #333; line-height: 1.45;
+      margin-top: 30px; max-width: 600px;
+    }
+    .ds-phrase strong { color: #666; font-weight: 600; }
+    .ds-bottom { position: relative; z-index: 1; }
+    .ds-bar { width: 100%; height: 2px; background: #111; border-radius: 1px; }
+    .ds-fill { height: 2px; border-radius: 1px; }
+    .ds-days { font-size: 13px; color: #222; letter-spacing: .18em; margin-top: 8px; }
+
+    .dc1 .ds-jnum,.dc1 .ds-km { color: var(--green); }
+    .dc1 .ds-fill { background: var(--green); }
+
+    .dc2 .ds-jnum,.dc2 .ds-km { color: var(--red); }
+    .dc2 .ds-fill { background: var(--red); }
+
+    .dc3 .ds-jnum,.dc3 .ds-km { color: var(--yellow); }
+    .dc3 .ds-fill { background: var(--yellow); }
+
+    .dc4 .ds-jnum,.dc4 .ds-km { color: var(--orange2); }
+    .dc4 .ds-fill { background: var(--orange2); }
+
+    .dc5 .ds-jnum,.dc5 .ds-km { color: var(--gold); }
+    .dc5 .ds-fill { background: var(--gold); }
+
+    /* slide 8 — leçons */
+    #sc8 { justify-content: space-between; }
+    #sc8 .sc-head { position: relative; z-index:1; }
+    .lessons { display:flex; flex-direction:column; gap:52px; position:relative; z-index:1; }
+    .lesson { display:flex; gap:34px; align-items:flex-start; }
+    .l-num { font-size:54px; font-weight:900; color:#141414; line-height:1; min-width:58px; letter-spacing:-.02em; }
+    .l-title { font-size:34px; font-weight:700; color:white; line-height:1.1; margin-bottom:8px; }
+    .l-body { font-size:21px; font-weight:300; color:#3a3a3a; line-height:1.45; }
+    #sc8 .sc-bottom { font-size:15px; color:#1e1e1e; letter-spacing:.06em; position:relative; z-index:1; }
+
+    /* slide 9 — final */
+    #sc9 { justify-content:center; align-items:center; text-align:center; }
+    #sc9::before {
+      content:'';
+      position:absolute; inset:0;
+      background: radial-gradient(ellipse 800px 600px at 50% 50%, rgba(255,215,0,.05) 0%,transparent 65%);
+    }
+    .fs-wrap { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:38px; }
+    .fs-tag { font-size:15px; font-weight:500; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); }
+    .fs-big {
+      font-size:96px; font-weight:900;
+      line-height:.9; letter-spacing:-.04em; text-align:center;
+    }
+    .fs-big .acc { color:var(--gold); }
+    .fs-big .gone { font-size:64px; color:#141414; display:block; margin-top:8px; }
+    .fs-line { width:70px; height:1px; background:var(--gold); opacity:.25; }
+    .fs-cities { font-size:20px; font-weight:300; color:#2a2a2a; letter-spacing:.08em; }
+    .fs-handle { font-size:19px; color:#1e1e1e; letter-spacing:.06em; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+============================================================ -->
+<nav>
+  <a href="#annonce"><span class="dot" style="background:var(--orange)"></span>Post Annonce</a>
+  <a href="#stories"><span class="dot" style="background:#888"></span>Stories J1–J5</a>
+  <a href="#feed"><span class="dot" style="background:#888"></span>Posts Feed J1–J5</a>
+  <a href="#arrivee"><span class="dot" style="background:var(--gold)"></span>Post Arrivée</a>
+  <a href="#carrousel"><span class="dot" style="background:#888"></span>Carrousel Bilan</a>
+</nav>
+
+
+<div class="edit-bar">
+  <p><strong>Mode édition</strong> — active pour modifier les textes directement sur les visuels</p>
+  <button id="toggle-edit" onclick="document.body.classList.toggle('editing'); this.classList.toggle('active'); this.textContent = document.body.classList.contains('editing') ? '✕ Terminer' : '✏︎ Éditer les textes'">✏︎ Éditer les textes</button>
+</div>
+
+<!-- ============================================================
+     ① POST ANNONCE
+============================================================ -->
+<section class="section" id="annonce">
+  <div class="section-header">
+    <div class="section-title">① Post Annonce</div>
+    <div class="section-desc">
+      À publier <strong>maintenant</strong>, avant le départ. Format carré 1080×1080.<br>
+      📸 Pour screenshotter en pleine résolution : F12 → icône téléphone → largeur <strong>1080</strong> → capture.
+    </div>
+  </div>
+
+  <div class="post">
+    <!-- bg -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 600px 500px at 80% 15%,rgba(232,82,26,.09) 0%,transparent 65%);pointer-events:none"></div>
+
+    <!-- top -->
+    <div style="position:relative;z-index:1">
+      <div class="ann-label">Road trip vélo</div>
+      <div class="ann-headline">700<span class="o"> KM</span><br>5 JOURS<br><span class="o">À VÉLO.</span></div>
+    </div>
+
+    <!-- map -->
+    <div class="ann-map">
+      <svg viewBox="0 0 888 130" width="888" height="130" style="overflow:visible;display:block">
+        <defs>
+          <linearGradient id="rg1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#E8521A" stop-opacity=".5"/>
+            <stop offset="100%" stop-color="#FFD700"/>
+          </linearGradient>
+        </defs>
+        <path d="M 44 104 C 100 92 150 82 196 74 C 260 62 310 52 380 43 C 445 34 510 26 580 19 C 650 12 720 8 844 4"
+              fill="none" stroke="url(#rg1)" stroke-width="2.5" stroke-dasharray="7 5" opacity=".75"/>
+        <circle cx="44"  cy="104" r="8"  fill="#E8521A"/>
+        <circle cx="196" cy="74"  r="5"  fill="#F06030" opacity=".85"/>
+        <circle cx="380" cy="43"  r="5"  fill="#F07840" opacity=".85"/>
+        <circle cx="540" cy="23"  r="5"  fill="#F08A50" opacity=".85"/>
+        <circle cx="700" cy="11"  r="5"  fill="#F09A60" opacity=".85"/>
+        <circle cx="844" cy="4"   r="10" fill="#FFD700"/>
+        <text x="44"  y="126" text-anchor="middle" fill="white" font-size="18" font-weight="700" font-family="-apple-system,sans-serif" letter-spacing=".05em">RENNES</text>
+        <text x="196" y="96"  text-anchor="middle" fill="#555"  font-size="13" font-family="-apple-system,sans-serif">FLERS</text>
+        <text x="380" y="65"  text-anchor="middle" fill="#555"  font-size="13" font-family="-apple-system,sans-serif">ROUEN</text>
+        <text x="540" y="45"  text-anchor="middle" fill="#555"  font-size="13" font-family="-apple-system,sans-serif">AMIENS</text>
+        <text x="700" y="33"  text-anchor="middle" fill="#444"  font-size="11" font-family="-apple-system,sans-serif">VALENCIENNES</text>
+        <text x="844" y="26"  text-anchor="middle" fill="white" font-size="18" font-weight="700" font-family="-apple-system,sans-serif">BRUXELLES</text>
+      </svg>
+    </div>
+
+    <!-- stats -->
+    <div class="ann-stats">
+      <div class="ann-stat">
+        <div class="ann-stat-val">700<sup>km</sup></div>
+        <div class="ann-stat-lbl">Distance totale</div>
+      </div>
+      <div class="ann-stat">
+        <div class="ann-stat-val">5<sup>j</sup></div>
+        <div class="ann-stat-lbl">Consécutifs</div>
+      </div>
+      <div class="ann-stat">
+        <div class="ann-stat-val">5</div>
+        <div class="ann-stat-lbl">Étapes</div>
+      </div>
+    </div>
+
+    <!-- bottom -->
+    <div class="ann-bottom">
+      <div class="ann-date"><strong>14 — 18 MAI</strong> 2026</div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     ② STORIES
+============================================================ -->
+<section class="section" id="stories">
+  <div class="section-header">
+    <div class="section-title">② Stories — Jour 1 à 5</div>
+    <div class="section-desc">
+      Format 1080×1920. Poste chaque soir depuis ton iPhone.<br>
+      Ajoute-les dans les <strong>Highlights</strong> correspondants. 📸 F12 → icône téléphone → largeur <strong>1080</strong> → capture.
+    </div>
+  </div>
+
+  <!-- J1 -->
+  <p class="item-label">STORY · JOUR 1 · 14 MAI</p>
+  <div class="story s-j1">
+    <div class="bg-blob"></div>
+    <div class="st-bg-num">1</div>
+    <div class="st-body">
+      <div class="st-day-label" contenteditable>Jour 1 · Mercredi 14 mai</div>
+      <div class="st-route"><strong>RENNES</strong> → FLERS</div>
+      <div class="st-km">140 <span class="st-km-unit">km</span></div>
+      <div class="st-divider"></div>
+      <div class="st-tagline" contenteditable>C'est parti, 140 km jusqu'à Flers</div>
+    </div>
+    <div class="st-foot">
+      <div class="st-progress">
+        <div class="st-pdot now"></div><div class="st-pdot"></div>
+        <div class="st-pdot"></div><div class="st-pdot"></div><div class="st-pdot"></div>
+      </div>
+      <div class="st-loc" contenteditable>📍 <strong>Flers</strong>, Normandie</div>
+    </div>
+  </div>
+
+  <!-- J2 -->
+  <p class="item-label">STORY · JOUR 2 · 15 MAI</p>
+  <div class="story s-j2">
+    <div class="bg-blob"></div>
+    <div class="st-bg-num">2</div>
+    <div class="st-body">
+      <div class="st-day-label" contenteditable>Jour 2 · Jeudi 15 mai</div>
+      <div class="st-route"><strong>FLERS</strong> → ROUEN</div>
+      <div class="st-km">200 <span class="st-km-unit">km</span></div>
+      <div class="st-divider"></div>
+      <div class="st-tagline" contenteditable>La plus grosse étape du voyage, let's go</div>
+    </div>
+    <div class="st-foot">
+      <div class="st-progress">
+        <div class="st-pdot done"></div><div class="st-pdot now"></div>
+        <div class="st-pdot"></div><div class="st-pdot"></div><div class="st-pdot"></div>
+      </div>
+      <div class="st-loc" contenteditable>📍 <strong>Rouen</strong>, Normandie</div>
+    </div>
+  </div>
+
+  <!-- J3 -->
+  <p class="item-label">STORY · JOUR 3 · 16 MAI</p>
+  <div class="story s-j3">
+    <div class="bg-blob"></div>
+    <div class="st-bg-num">3</div>
+    <div class="st-body">
+      <div class="st-day-label" contenteditable>Jour 3 · Vendredi 16 mai</div>
+      <div class="st-route"><strong>ROUEN</strong> → AMIENS</div>
+      <div class="st-km">120 <span class="st-km-unit">km</span></div>
+      <div class="st-divider"></div>
+      <div class="st-tagline" contenteditable>Enfin une journée un peu tranquille</div>
+    </div>
+    <div class="st-foot">
+      <div class="st-progress">
+        <div class="st-pdot done"></div><div class="st-pdot done"></div>
+        <div class="st-pdot now"></div><div class="st-pdot"></div><div class="st-pdot"></div>
+      </div>
+      <div class="st-loc" contenteditable>📍 <strong>Amiens</strong>, Picardie</div>
+    </div>
+  </div>
+
+  <!-- J4 -->
+  <p class="item-label">STORY · JOUR 4 · 17 MAI</p>
+  <div class="story s-j4">
+    <div class="bg-blob"></div>
+    <div class="st-bg-num">4</div>
+    <div class="st-body">
+      <div class="st-day-label" contenteditable>Jour 4 · Samedi 17 mai</div>
+      <div class="st-route"><strong>AMIENS</strong> → VALENCIENNES</div>
+      <div class="st-km">130 <span class="st-km-unit">km</span></div>
+      <div class="st-divider"></div>
+      <div class="st-tagline" contenteditable>4ème jour, les jambes se font entendre</div>
+    </div>
+    <div class="st-foot">
+      <div class="st-progress">
+        <div class="st-pdot done"></div><div class="st-pdot done"></div>
+        <div class="st-pdot done"></div><div class="st-pdot now"></div><div class="st-pdot"></div>
+      </div>
+      <div class="st-loc" contenteditable>📍 <strong>Valenciennes</strong>, Nord</div>
+    </div>
+  </div>
+
+  <!-- J5 -->
+  <p class="item-label">STORY · JOUR 5 · 18 MAI</p>
+  <div class="story s-j5">
+    <div class="bg-blob"></div>
+    <div class="st-bg-num">5</div>
+    <div class="st-body">
+      <div class="st-day-label" contenteditable>Jour 5 · Dimanche 18 mai</div>
+      <div class="st-route"><strong>VALENCIENNES</strong> → BRUXELLES</div>
+      <div class="st-km">110 <span class="st-km-unit">km</span></div>
+      <div class="st-divider"></div>
+      <div class="st-tagline" contenteditable>Dernière étape, Bruxelles ce soir</div>
+    </div>
+    <div class="st-foot">
+      <div class="st-progress">
+        <div class="st-pdot done"></div><div class="st-pdot done"></div>
+        <div class="st-pdot done"></div><div class="st-pdot done"></div>
+        <div class="st-pdot now"></div>
+      </div>
+      <div class="st-loc" contenteditable>📍 <strong>Bruxelles</strong> 🇧🇪</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     ③ POSTS FEED
+============================================================ -->
+<section class="section" id="feed">
+  <div class="section-header">
+    <div class="section-title">③ Posts Feed — Jour 1 à 5</div>
+    <div class="section-desc">
+      À publier chaque soir vers <strong>19h</strong>. Format 1080×1080.<br>
+      Légendes prêtes — copie-colle directement dans Instagram.
+    </div>
+  </div>
+
+  <!-- J1 -->
+  <p class="item-label">FEED · JOUR 1 · 14 MAI SOIR</p>
+  <div class="feed-post f-j1">
+    <div class="feed-blob"></div>
+    <div style="position:relative;z-index:1">
+      <div class="fd-badge"><div class="fd-dot"></div><div class="fd-day-txt" contenteditable>Jour 1 · Mercredi 14 mai</div></div>
+      <div class="fd-route"><strong>RENNES</strong> → FLERS</div>
+      <div class="fd-km">140 <span class="u">km</span></div>
+      <div class="fd-stats">
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Départ</div><div class="fd-stat-val" contenteditable>08h00</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Météo</div><div class="fd-stat-val" contenteditable>—</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Dénivelé</div><div class="fd-stat-val" contenteditable>— m</div></div>
+      </div>
+      <div class="fd-divider"></div>
+      <div class="fd-caption" contenteditable>
+        Parti à 08h00 de Rennes, arrivé vers 16h30 à Flers. La Bretagne, la Normandie, et l'impression que c'est vraiment lancé.
+      </div>
+    </div>
+    <div class="fd-bottom">
+      <div class="fd-loc" contenteditable>📍 <strong>Flers</strong>, Normandie</div>
+
+    </div>
+  </div>
+
+  <!-- J2 -->
+  <p class="item-label">FEED · JOUR 2 · 15 MAI SOIR</p>
+  <div class="feed-post f-j2">
+    <div class="feed-blob"></div>
+    <div style="position:relative;z-index:1">
+      <div class="fd-badge"><div class="fd-dot"></div><div class="fd-day-txt" contenteditable>Jour 2 · Jeudi 15 mai</div></div>
+      <div class="fd-route"><strong>FLERS</strong> → ROUEN</div>
+      <div class="fd-km">200 <span class="u">km</span></div>
+      <div class="fd-stats">
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Départ</div><div class="fd-stat-val" contenteditable>07h30</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Météo</div><div class="fd-stat-val" contenteditable>—</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Dénivelé</div><div class="fd-stat-val" contenteditable>— m</div></div>
+      </div>
+      <div class="fd-divider"></div>
+      <div class="fd-caption" contenteditable>
+        La plus longue étape avec le vent de face en prime. C'était dur.<br><br>
+        Arrivé à Rouen j'avais plus qu'une envie c'est de manger et de m'allonger.
+      </div>
+    </div>
+    <div class="fd-bottom">
+      <div class="fd-loc" contenteditable>📍 <strong>Rouen</strong>, Normandie</div>
+
+    </div>
+  </div>
+
+  <!-- J3 -->
+  <p class="item-label">FEED · JOUR 3 · 16 MAI SOIR</p>
+  <div class="feed-post f-j3">
+    <div class="feed-blob"></div>
+    <div style="position:relative;z-index:1">
+      <div class="fd-badge"><div class="fd-dot"></div><div class="fd-day-txt" contenteditable>Jour 3 · Vendredi 16 mai</div></div>
+      <div class="fd-route"><strong>ROUEN</strong> → AMIENS</div>
+      <div class="fd-km">120 <span class="u">km</span></div>
+      <div class="fd-stats">
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Départ</div><div class="fd-stat-val" contenteditable>08h30</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Météo</div><div class="fd-stat-val" contenteditable>—</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Dénivelé</div><div class="fd-stat-val" contenteditable>— m</div></div>
+      </div>
+      <div class="fd-divider"></div>
+      <div class="fd-caption" contenteditable>
+        Route plate, champs à perte de vue. Beaucoup mieux que les deux premiers jours franchement.<br><br>
+        3 étapes sur 5 de faites.
+      </div>
+    </div>
+    <div class="fd-bottom">
+      <div class="fd-loc" contenteditable>📍 <strong>Amiens</strong>, Picardie</div>
+
+    </div>
+  </div>
+
+  <!-- J4 -->
+  <p class="item-label">FEED · JOUR 4 · 17 MAI SOIR</p>
+  <div class="feed-post f-j4">
+    <div class="feed-blob"></div>
+    <div style="position:relative;z-index:1">
+      <div class="fd-badge"><div class="fd-dot"></div><div class="fd-day-txt" contenteditable>Jour 4 · Samedi 17 mai</div></div>
+      <div class="fd-route"><strong>AMIENS</strong> → VALENCIENNES</div>
+      <div class="fd-km">130 <span class="u">km</span></div>
+      <div class="fd-stats">
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Départ</div><div class="fd-stat-val" contenteditable>08h00</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Météo</div><div class="fd-stat-val" contenteditable>—</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Dénivelé</div><div class="fd-stat-val" contenteditable>— m</div></div>
+      </div>
+      <div class="fd-divider"></div>
+      <div class="fd-caption" contenteditable>
+        4 jours de selle consécutifs, les jambes et le dos commencent vraiment à se faire entendre.<br><br>
+        Mais demain c'est Bruxelles.
+      </div>
+    </div>
+    <div class="fd-bottom">
+      <div class="fd-loc" contenteditable>📍 <strong>Valenciennes</strong>, Nord</div>
+
+    </div>
+  </div>
+
+  <!-- J5 -->
+  <p class="item-label">FEED · JOUR 5 · 18 MAI APRÈS-MIDI</p>
+  <div class="feed-post f-j5">
+    <div class="feed-blob"></div>
+    <div style="position:relative;z-index:1">
+      <div class="fd-badge"><div class="fd-dot"></div><div class="fd-day-txt" contenteditable>Jour 5 · Dimanche 18 mai</div></div>
+      <div class="fd-route"><strong>VALENCIENNES</strong> → BRUXELLES</div>
+      <div class="fd-km">700 <span class="u">km</span></div>
+      <div class="fd-stats">
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Départ</div><div class="fd-stat-val" contenteditable>08h30</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Météo</div><div class="fd-stat-val" contenteditable>—</div></div>
+        <div class="fd-stat-item"><div class="fd-stat-lbl">Dénivelé</div><div class="fd-stat-val" contenteditable>— m</div></div>
+      </div>
+      <div class="fd-divider"></div>
+      <div class="fd-caption" contenteditable>
+        Parti de Rennes mercredi matin, arrivé à Bruxelles dimanche après-midi. 700 km en 5 jours.
+      </div>
+    </div>
+    <div class="fd-bottom">
+      <div class="fd-loc" contenteditable>📍 <strong>Bruxelles</strong> 🇧🇪</div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     ④ POST ARRIVÉE
+============================================================ -->
+<section class="section" id="arrivee">
+  <div class="section-header">
+    <div class="section-title">④ Post Arrivée</div>
+    <div class="section-desc">
+      Le post le plus important. À publier <strong>dimanche 18 mai</strong> dès l'arrivée à Bruxelles.<br>
+      Remplace ou complète le Post Feed J5 selon l'émotion du moment.
+    </div>
+  </div>
+
+  <div class="post" id="arrivee-post">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 700px 500px at 50% 50%,rgba(255,215,0,.06) 0%,transparent 65%);pointer-events:none"></div>
+
+    <div style="position:relative;z-index:1">
+      <div class="arr-label" contenteditable>Arrivée · Bruxelles · 18 mai 2026</div>
+      <div class="arr-grid">
+        <div class="arr-stat">
+          <div class="arr-val gold">700</div>
+          <div class="arr-lbl">Kilomètres</div>
+        </div>
+        <div class="arr-stat">
+          <div class="arr-val">5</div>
+          <div class="arr-lbl">Jours consécutifs</div>
+        </div>
+        <div class="arr-stat">
+          <div class="arr-val">~30</div>
+          <div class="arr-lbl">Heures de selle</div>
+        </div>
+        <div class="arr-stat">
+          <div class="arr-val gold">0</div>
+          <div class="arr-lbl">Étapes</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative;z-index:1">
+      <div class="arr-divider"></div>
+      <div class="arr-main" contenteditable>
+        PARTI DE RENNES<br>
+        <span class="dim">MERCREDI MATIN.</span><br>
+        À <span class="gold">BRUXELLES</span><br>
+        DIMANCHE SOIR.
+      </div>
+      <div class="arr-sub" contenteditable>À vélo</div>
+    </div>
+
+    <div class="arr-bottom">
+      <div class="arr-loc">📍 <strong>Bruxelles</strong> 🇧🇪</div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     ⑤ CARROUSEL BILAN
+============================================================ -->
+<section class="section" id="carrousel">
+  <div class="section-header">
+    <div class="section-title">⑤ Carrousel Bilan — 9 slides</div>
+    <div class="section-desc">
+      À publier <strong>3 à 5 jours après l'arrivée</strong>. Screenshot les 9 slides dans l'ordre,<br>
+      publie en carrousel Instagram. C'est le post qui restera.
+    </div>
+  </div>
+
+  <!-- Slide 1 — Couverture -->
+  <p class="item-label">SLIDE 1 / 9 — COUVERTURE</p>
+  <div class="slide" id="sc1">
+    <div class="big-ghost">5</div>
+    <div class="sc-content">
+      <div class="sc-tag">Le bilan</div>
+      <div class="sc-title">RENNES<br>→ BRUXELLES</div>
+      <div class="sc-sub" contenteditable>700 km · 5 jours</div>
+    </div>
+  </div>
+
+  <!-- Slide 2 — Carte -->
+  <p class="item-label">SLIDE 2 / 9 — LA CARTE</p>
+  <div class="slide" id="sc2">
+    <div class="sc-head">L'itinéraire complet</div>
+    <div class="sc-map">
+      <svg viewBox="0 0 800 360" width="800" height="360" style="overflow:visible">
+        <defs>
+          <linearGradient id="mg2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#E8521A" stop-opacity=".6"/>
+            <stop offset="100%" stop-color="#FFD700"/>
+          </linearGradient>
+        </defs>
+        <path d="M 60 310 Q 155 275 225 235 Q 310 190 390 155 Q 460 125 530 98 Q 620 63 720 28"
+              fill="none" stroke="url(#mg2)" stroke-width="3" stroke-dasharray="8 5" opacity=".8"/>
+        <circle cx="60"  cy="310" r="10" fill="#E8521A"/>
+        <circle cx="225" cy="235" r="7"  fill="#F06030" opacity=".9"/>
+        <circle cx="390" cy="155" r="7"  fill="#F08040" opacity=".9"/>
+        <circle cx="530" cy="98"  r="7"  fill="#F09050" opacity=".9"/>
+        <circle cx="648" cy="56"  r="6"  fill="#F0A060" opacity=".9"/>
+        <circle cx="720" cy="28"  r="12" fill="#FFD700"/>
+        <text x="60"  y="338" text-anchor="middle" fill="white" font-size="20" font-weight="700" font-family="-apple-system,sans-serif">RENNES</text>
+        <text x="60"  y="357" text-anchor="middle" fill="#333" font-size="13" font-family="-apple-system,sans-serif">J1 · 140 km</text>
+        <text x="225" y="214" text-anchor="middle" fill="#555" font-size="16" font-weight="600" font-family="-apple-system,sans-serif">FLERS</text>
+        <text x="390" y="134" text-anchor="middle" fill="#555" font-size="16" font-weight="600" font-family="-apple-system,sans-serif">ROUEN</text>
+        <text x="390" y="114" text-anchor="middle" fill="#2a2a2a" font-size="12" font-family="-apple-system,sans-serif">J2 · 200 km</text>
+        <text x="530" y="77"  text-anchor="middle" fill="#555" font-size="16" font-weight="600" font-family="-apple-system,sans-serif">AMIENS</text>
+        <text x="648" y="36"  text-anchor="middle" fill="#444" font-size="13" font-family="-apple-system,sans-serif">VALENCIENNES</text>
+        <text x="720" y="10"  text-anchor="middle" fill="white" font-size="20" font-weight="700" font-family="-apple-system,sans-serif">BRUXELLES</text>
+        <text x="143" y="285" text-anchor="middle" fill="#2a2a2a" font-size="13" font-family="-apple-system,sans-serif">140 km</text>
+        <text x="308" y="203" text-anchor="middle" fill="#2a2a2a" font-size="13" font-family="-apple-system,sans-serif">200 km</text>
+        <text x="460" y="134" text-anchor="middle" fill="#2a2a2a" font-size="13" font-family="-apple-system,sans-serif">120 km</text>
+        <text x="590" y="84"  text-anchor="middle" fill="#2a2a2a" font-size="13" font-family="-apple-system,sans-serif">130 km</text>
+        <text x="684" y="48"  text-anchor="middle" fill="#2a2a2a" font-size="12" font-family="-apple-system,sans-serif">110 km</text>
+      </svg>
+    </div>
+    <div class="sc-foot" contenteditable>📍 France · Belgique · Mai 2026</div>
+  </div>
+
+  <!-- Slides 3-7 — Jours -->
+  <p class="item-label">SLIDE 3 / 9 — JOUR 1</p>
+  <div class="slide day-slide dc1">
+    <div class="ds-top">
+      <div class="ds-jnum">J 1</div>
+      <div class="ds-date" contenteditable>14 mai · Mercredi</div>
+      <div class="ds-route">Rennes → Flers</div>
+      <div class="ds-km">140 <span>km</span></div>
+      <div class="ds-phrase" contenteditable>Premier jour, 140 km, ça s'est bien passé</div>
+    </div>
+    <div class="ds-bottom">
+      <div class="ds-bar"><div class="ds-fill" style="width:20%"></div></div>
+      <div class="ds-days">1 / 5 JOURS</div>
+    </div>
+
+  </div>
+
+  <p class="item-label">SLIDE 4 / 9 — JOUR 2</p>
+  <div class="slide day-slide dc2">
+    <div class="ds-top">
+      <div class="ds-jnum">J 2</div>
+      <div class="ds-date" contenteditable>15 mai · Jeudi</div>
+      <div class="ds-route">Flers → Rouen</div>
+      <div class="ds-km">200 <span>km</span></div>
+      <div class="ds-phrase" contenteditable>La plus longue étape, vent de face toute la journée</div>
+    </div>
+    <div class="ds-bottom">
+      <div class="ds-bar"><div class="ds-fill" style="width:40%"></div></div>
+      <div class="ds-days">2 / 5 JOURS</div>
+    </div>
+
+  </div>
+
+  <p class="item-label">SLIDE 5 / 9 — JOUR 3</p>
+  <div class="slide day-slide dc3">
+    <div class="ds-top">
+      <div class="ds-jnum">J 3</div>
+      <div class="ds-date" contenteditable>16 mai · Vendredi</div>
+      <div class="ds-route">Rouen → Amiens</div>
+      <div class="ds-km">120 <span>km</span></div>
+      <div class="ds-phrase" contenteditable>Route plate, champs partout, bonne journée</div>
+    </div>
+    <div class="ds-bottom">
+      <div class="ds-bar"><div class="ds-fill" style="width:60%"></div></div>
+      <div class="ds-days">3 / 5 JOURS</div>
+    </div>
+
+  </div>
+
+  <p class="item-label">SLIDE 6 / 9 — JOUR 4</p>
+  <div class="slide day-slide dc4">
+    <div class="ds-top">
+      <div class="ds-jnum">J 4</div>
+      <div class="ds-date" contenteditable>17 mai · Samedi</div>
+      <div class="ds-route">Amiens → Valenciennes</div>
+      <div class="ds-km">130 <span>km</span></div>
+      <div class="ds-phrase" contenteditable>Les jambes et le dos commencent à raler, demain Bruxelles</div>
+    </div>
+    <div class="ds-bottom">
+      <div class="ds-bar"><div class="ds-fill" style="width:80%"></div></div>
+      <div class="ds-days">4 / 5 JOURS</div>
+    </div>
+
+  </div>
+
+  <p class="item-label">SLIDE 7 / 9 — JOUR 5</p>
+  <div class="slide day-slide dc5">
+    <div class="ds-top">
+      <div class="ds-jnum">J 5</div>
+      <div class="ds-date" contenteditable>18 mai · Dimanche</div>
+      <div class="ds-route">Valenciennes → Bruxelles</div>
+      <div class="ds-km">110 <span>km</span></div>
+      <div class="ds-phrase" contenteditable>Bruxelles.</div>
+    </div>
+    <div class="ds-bottom">
+      <div class="ds-bar"><div class="ds-fill" style="width:100%"></div></div>
+      <div class="ds-days">5 / 5 JOURS ✓</div>
+    </div>
+
+  </div>
+
+  <!-- Slide 8 — Leçons -->
+  <p class="item-label">SLIDE 8 / 9 — LEÇONS</p>
+  <div class="slide" id="sc8">
+    <div class="sc-head">Ce que 680 km m'ont appris</div>
+    <div class="lessons">
+      <div class="lesson">
+        <div class="l-num">01</div>
+        <div>
+          <div class="l-title" contenteditable>Partir trop fort, ça se paye le lendemain</div>
+          <div class="l-body" contenteditable>Le premier jour tu te sens bien, tu pousses un peu trop. Le deuxième jour tu le regrettes.</div>
+        </div>
+      </div>
+      <div class="lesson">
+        <div class="l-num">02</div>
+        <div>
+          <div class="l-title" contenteditable>Le vent de face c'est pire que les côtes</div>
+          <div class="l-body" contenteditable>Une montée t'as le haut à viser. Le vent de face t'as rien, ça dure des heures.</div>
+        </div>
+      </div>
+      <div class="lesson">
+        <div class="l-num">03</div>
+        <div>
+          <div class="l-title" contenteditable>Seul y'a personne pour te motiver à part toi</div>
+          <div class="l-body" contenteditable>Personne pour t'attendre au bout, personne pour t'encourager en route. T'as juste à te lever chaque matin et repartir.</div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- Slide 9 — Final -->
+  <p class="item-label">SLIDE 9 / 9 — FIN</p>
+  <div class="slide" id="sc9">
+    <div class="fs-wrap">
+      <div class="fs-tag">Rennes → Bruxelles · Mai 2026</div>
+      <div class="fs-big">
+        700 <span class="acc">KM</span><br>
+        5 JOURS<br>
+        1 <span class="acc">VÉLO</span>
+        <span class="gone">0 ABANDON</span>
+      </div>
+      <div class="fs-line"></div>
+      <div class="fs-cities">Rennes · Flers · Rouen · Amiens · Valenciennes · Bruxelles</div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</body>
+</html>
+
+
+
+
+
+
