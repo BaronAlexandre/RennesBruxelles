@@ -1,3 +1,4 @@
+import math
 import requests
 import sys
 
@@ -33,6 +34,37 @@ STAGES = [
     {"name": "J4 - Amiens Valenciennes",    "start": (49.8942,  2.2957), "end": (50.3576,  3.5238)},
     {"name": "J5 - Valenciennes Bruxelles", "start": (50.3576,  3.5238), "end": (50.8503,  4.3517)},
 ]
+
+
+def haversine(a, b):
+    R = 6371
+    lat1, lon1 = math.radians(a[1]), math.radians(a[0])
+    lat2, lon2 = math.radians(b[1]), math.radians(b[0])
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    h = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    return 2 * R * math.asin(math.sqrt(h))
+
+
+def find_midpoint(coords):
+    total = sum(haversine(coords[i], coords[i+1]) for i in range(len(coords) - 1))
+    target, cumul = total / 2, 0
+    for i in range(len(coords) - 1):
+        d = haversine(coords[i], coords[i+1])
+        if cumul + d >= target:
+            return coords[i]
+        cumul += d
+    return coords[-1]
+
+
+def reverse_geocode(lng, lat):
+    r = requests.get(
+        "https://nominatim.openstreetmap.org/reverse",
+        params={"lat": lat, "lon": lng, "format": "json", "zoom": 10},
+        headers={"User-Agent": "RennesBruxellesVelo/1.0"},
+    )
+    r.raise_for_status()
+    addr = r.json().get("address", {})
+    return addr.get("city") or addr.get("town") or addr.get("village") or addr.get("hamlet") or "?"
 
 
 def get_osrm_route(start, end):
