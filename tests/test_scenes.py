@@ -1,0 +1,35 @@
+import os
+import pytest
+from PIL import Image
+from video.scenes import make_intro_clip, make_windows_clip
+from video.constants import WINDOW_DELAYS, WINDOW_FREEZE_DURATION
+
+
+def _dummy_asset(tmp_path):
+    img = Image.new("RGB", (320, 240), "#ff0000")
+    p = str(tmp_path / "intro.png")
+    img.save(p)
+    return p
+
+
+def test_intro_clip_duration(tmp_path):
+    clip = make_intro_clip(1920, 1080, asset_path=_dummy_asset(tmp_path))
+    assert abs(clip.duration - 3.0) < 0.1
+
+
+def test_intro_clip_frame_shape(tmp_path):
+    clip = make_intro_clip(1920, 1080, asset_path=_dummy_asset(tmp_path))
+    frame = clip.get_frame(0)
+    assert frame.shape == (1080, 1920, 3)
+
+
+def test_windows_clip_duration():
+    clip = make_windows_clip(1920, 1080)
+    expected = sum(WINDOW_DELAYS) + WINDOW_FREEZE_DURATION
+    assert abs(clip.duration - expected) < 0.5
+
+
+def test_windows_clip_frame_shape():
+    clip = make_windows_clip(1920, 1080)
+    frame = clip.get_frame(0)
+    assert frame.shape == (1080, 1920, 3)
