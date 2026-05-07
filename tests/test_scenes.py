@@ -33,3 +33,28 @@ def test_windows_clip_frame_shape():
     clip = make_windows_clip(1920, 1080)
     frame = clip.get_frame(0)
     assert frame.shape == (1080, 1920, 3)
+
+
+from video.scenes import make_blackout_clip, make_philosophical_clip
+from video.constants import BLACKOUT_DURATION, CHAR_DELAY, PHILOSOPHICAL_QUESTION, THINK_DURATION, FADE_DURATION
+
+
+def test_blackout_clip_duration():
+    clip = make_blackout_clip(1920, 1080)
+    assert abs(clip.duration - BLACKOUT_DURATION) < 0.01
+
+
+def test_blackout_clip_is_black():
+    clip = make_blackout_clip(1920, 1080)
+    assert clip.get_frame(0).max() == 0
+
+
+def test_philosophical_clip_duration():
+    expected = len(PHILOSOPHICAL_QUESTION) * CHAR_DELAY + 0.5 + THINK_DURATION + FADE_DURATION
+    clip = make_philosophical_clip(1920, 1080)
+    assert abs(clip.duration - expected) < 0.5
+
+
+def test_philosophical_clip_frame_shape():
+    clip = make_philosophical_clip(1920, 1080)
+    assert clip.get_frame(0).shape == (1080, 1920, 3)

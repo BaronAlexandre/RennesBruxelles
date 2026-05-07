@@ -72,3 +72,56 @@ def make_windows_clip(w: int, h: int) -> VideoClip:
         return _np(canvas)
 
     return VideoClip(make_frame, duration=total).set_fps(FPS)
+
+
+def make_blackout_clip(w: int, h: int) -> VideoClip:
+    arr = np.zeros((h, w, 3), dtype=np.uint8)
+    return ImageClip(arr).set_duration(BLACKOUT_DURATION).set_fps(FPS)
+
+
+def make_philosophical_clip(w: int, h: int) -> VideoClip:
+    type_dur = len(PHILOSOPHICAL_QUESTION) * CHAR_DELAY
+    pause = 0.5
+    total = type_dur + pause + THINK_DURATION + FADE_DURATION
+
+    font_mono = _load_font(16)
+
+    win_w = min(980, w - 60)
+    win_h = 130
+    win_x = (w - win_w) // 2
+    win_y = (h - win_h) // 2
+
+    def make_frame(t):
+        canvas = _black(w, h)
+        draw = ImageDraw.Draw(canvas)
+
+        # Window
+        draw.rectangle([win_x, win_y, win_x + win_w, win_y + win_h], fill=COLORS["bg"], outline=COLORS["border"])
+        bar_h = 32
+        draw.rectangle([win_x, win_y, win_x + win_w, win_y + bar_h], fill=COLORS["titlebar"])
+        for i, dc in enumerate([COLORS["dot_red"], COLORS["dot_yellow"], COLORS["dot_green"]]):
+            cx = win_x + 14 + i * 20
+            cy = win_y + bar_h // 2
+            draw.ellipse([cx - 5, cy - 5, cx + 5, cy + 5], fill=dc)
+
+        content_y = win_y + bar_h + 12
+
+        if t < type_dur + pause:
+            n = min(int(t / CHAR_DELAY), len(PHILOSOPHICAL_QUESTION))
+            draw.text((win_x + 14, content_y), "> " + PHILOSOPHICAL_QUESTION[:n], fill=COLORS["text_white"], font=font_mono)
+        else:
+            draw.text((win_x + 14, content_y), "> " + PHILOSOPHICAL_QUESTION, fill=COLORS["text_white"], font=font_mono)
+            think_t = t - type_dur - pause
+            if think_t < THINK_DURATION:
+                spin = SPINNER_CHARS[int(think_t * 8) % len(SPINNER_CHARS)]
+                draw.text((win_x + 14, content_y + 26), f"{spin} Thinking...", fill="#888888", font=font_mono)
+
+        # Fade to black
+        if t > type_dur + pause + THINK_DURATION:
+            alpha = min(1.0, (t - (type_dur + pause + THINK_DURATION)) / FADE_DURATION)
+            arr = _np(canvas).astype(float)
+            return (arr * (1.0 - alpha)).astype(np.uint8)
+
+        return _np(canvas)
+
+    return VideoClip(make_frame, duration=total).set_fps(FPS)
