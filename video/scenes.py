@@ -125,3 +125,50 @@ def make_philosophical_clip(w: int, h: int) -> VideoClip:
         return _np(canvas)
 
     return VideoClip(make_frame, duration=total).set_fps(FPS)
+
+
+def make_announcement_clip(w: int, h: int) -> VideoClip:
+    map_h = int(h * 0.50)
+    map_img = generate_route_map(w, map_h).convert("RGB")
+    map_np = _np(map_img).astype(float)
+
+    text_phase = len(ANNOUNCEMENT_LINES) * LINE_DELAY + 0.6
+    map_fade = 1.5
+    hold = 2.5
+    total = text_phase + map_fade + hold
+
+    font_big = _load_font(64)
+    font_med = _load_font(42)
+    font_small = _load_font(22)
+
+    text_start_y = int(h * 0.10)
+    map_y = int(h * 0.40)
+    cx = w // 2
+
+    def make_frame(t):
+        canvas = _black(w, h)
+        draw = ImageDraw.Draw(canvas)
+
+        # Announcement lines appear one by one
+        for i, line in enumerate(ANNOUNCEMENT_LINES):
+            if t >= i * LINE_DELAY:
+                y = text_start_y + i * 82
+                font = font_big if i == 0 else font_med
+                draw.text((cx, y), line, fill=COLORS["text_white"], font=font, anchor="mm")
+
+        # Map fades in after text phase
+        if t >= text_phase:
+            alpha = min(1.0, (t - text_phase) / map_fade)
+            canvas_np = _np(canvas).astype(float)
+            region = canvas_np[map_y:map_y + map_h, 0:w]
+            canvas_np[map_y:map_y + map_h, 0:w] = region * (1 - alpha) + map_np * alpha
+            canvas = Image.fromarray(canvas_np.astype(np.uint8))
+            draw = ImageDraw.Draw(canvas)
+
+        # Handle appears after map is fully visible
+        if t >= text_phase + map_fade:
+            draw.text((cx, h - 50), HANDLE, fill="#888888", font=font_small, anchor="mm")
+
+        return _np(canvas)
+
+    return VideoClip(make_frame, duration=total).set_fps(FPS)

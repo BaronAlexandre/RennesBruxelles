@@ -58,3 +58,18 @@ def test_philosophical_clip_duration():
 def test_philosophical_clip_frame_shape():
     clip = make_philosophical_clip(1920, 1080)
     assert clip.get_frame(0).shape == (1080, 1920, 3)
+
+
+from video.scenes import make_announcement_clip
+from video.constants import LINE_DELAY, ANNOUNCEMENT_LINES
+
+
+def test_announcement_clip_frame_shape():
+    clip = make_announcement_clip(1920, 1080)
+    assert clip.get_frame(0).shape == (1080, 1920, 3)
+
+
+def test_announcement_clip_duration():
+    clip = make_announcement_clip(1920, 1080)
+    # text phase + map fade + hold >= 6s
+    assert clip.duration >= 6.0
