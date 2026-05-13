@@ -29,12 +29,12 @@ Jour 1 — 140 km — Rennes → Flers
 **Matin**
 ```
 Jour 2 — Flers → Rouen
-180 km. Départ 07h30.
+200 km. Départ 07h30.
 ```
 
 **Soir**
 ```
-Jour 2 — 180 km — Flers → Rouen
+Jour 2 — 200 km — Flers → Rouen
 
 [Ce qui s'est passé. Comment tu te sens ce soir.]
 
