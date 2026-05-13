@@ -13,47 +13,55 @@ def _load_font(size: int) -> ImageFont.FreeTypeFont:
 
 
 def render_window(question: str, response_lines: list, width: int = 800, height: int = 500) -> Image.Image:
-    img = Image.new("RGB", (width, height), COLORS["bg"])
+    BG        = COLORS["bg"]
+    BAR_BG    = COLORS["titlebar"]
+    SEP       = COLORS["border"]
+    TEXT_W    = COLORS["text_white"]
+    TEXT_D    = COLORS["text_dim"]
+    TEXT_T    = COLORS["text_teal"]
+    TEXT_O    = COLORS["text_orange"]
+
+    img  = Image.new("RGB", (width, height), BG)
     draw = ImageDraw.Draw(img)
 
-    # Outer border
-    draw.rectangle([0, 0, width - 1, height - 1], outline=COLORS["border"])
-
-    # Title bar
-    bar_h = 36
-    draw.rectangle([1, 1, width - 2, bar_h], fill=COLORS["titlebar"])
-
-    # macOS dots
-    for i, color in enumerate([COLORS["dot_red"], COLORS["dot_yellow"], COLORS["dot_green"]]):
-        cx = 16 + i * 22
-        cy = bar_h // 2
-        draw.ellipse([cx - 6, cy - 6, cx + 6, cy + 6], fill=color)
-
-    # Title text
-    font_ui = _load_font(12)
-    draw.text((width // 2, bar_h // 2), "claude  —  bash", fill="#888888", font=font_ui, anchor="mm")
-
-    # Content area
+    font_ui   = _load_font(11)
     font_mono = _load_font(13)
-    y = bar_h + 16
 
-    # Prompt (may wrap on narrow windows)
-    prompt = "> " + question
-    char_w = 8
-    max_chars = max(20, (width - 40) // char_w)
+    # ── top status bar ──────────────────────────────────────────────
+    bar_h = 26
+    draw.rectangle([0, 0, width, bar_h], fill=BAR_BG)
+    draw.line([(0, bar_h), (width, bar_h)], fill=SEP, width=1)
+    draw.text((10, bar_h // 2), "Claude Code", fill=TEXT_T, font=font_ui, anchor="lm")
+    draw.text((width - 10, bar_h // 2), "Sonnet 4.6", fill=TEXT_D, font=font_ui, anchor="rm")
+
+    # ── bottom status bar ───────────────────────────────────────────
+    sb_y = height - 24
+    draw.rectangle([0, sb_y, width, height], fill=BAR_BG)
+    draw.line([(0, sb_y), (width, sb_y)], fill=SEP, width=1)
+    x = 10
+    draw.text((x, sb_y + 12), "Sonnet 4.6", fill=TEXT_T, font=font_ui, anchor="lm"); x += 90
+    draw.text((x, sb_y + 12), "|",          fill=TEXT_D, font=font_ui, anchor="lm"); x += 16
+    draw.text((x, sb_y + 12), "think/high", fill=TEXT_O, font=font_ui, anchor="lm")
+
+    # ── content ─────────────────────────────────────────────────────
+    content_top = bar_h + 12
+    content_bot = sb_y - 8
+    y = content_top
+
+    prompt   = "> " + question
+    char_w   = 8
+    max_chars = max(20, (width - 32) // char_w)
     for line in textwrap.wrap(prompt, width=max_chars) or [prompt]:
-        if y + 18 > height - 8:
+        if y + 18 > content_bot:
             break
-        draw.text((20, y), line, fill=COLORS["text_white"], font=font_mono)
+        draw.text((16, y), line, fill=TEXT_W, font=font_mono)
         y += 20
 
-    y += 4
-
-    # Response lines
+    y += 6
     for line in response_lines:
-        if y + 18 > height - 8:
+        if y + 18 > content_bot:
             break
-        draw.text((20, y), line, fill=COLORS["text_dim"], font=font_mono)
+        draw.text((16, y), line, fill=TEXT_D, font=font_mono)
         y += 20
 
     return img

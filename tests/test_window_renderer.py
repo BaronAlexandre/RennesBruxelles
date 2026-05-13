@@ -15,8 +15,8 @@ def test_render_window_is_rgb():
 
 def test_render_window_bg_color():
     img = render_window(Q, R)
-    # pixel just inside border should be bg color #1a1a1a = (26, 26, 26)
-    assert img.getpixel((2, 42)) == (26, 26, 26)
+    # pixel in content area should be Claude Code bg #0d1117 = (13, 17, 23)
+    assert img.getpixel((2, 42)) == (13, 17, 23)
 
 def test_render_window_custom_size():
     img = render_window(Q, R, width=600, height=400)

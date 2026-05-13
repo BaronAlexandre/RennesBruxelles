@@ -11,16 +11,14 @@ WIN_OFFSET_X = 40
 WIN_OFFSET_Y = 30
 
 COLORS = {
-    "bg":          "#1a1a1a",
-    "border":      "#333333",
-    "titlebar":    "#2d2d2d",
-    "dot_red":     "#FF5F57",
-    "dot_yellow":  "#FFBD2E",
-    "dot_green":   "#28CA41",
-    "text_white":  "#ffffff",
-    "text_dim":    "#a0a0a0",
-    "text_orange": "#E8521A",
-    "canvas_bg":   "#000000",
+    "bg":          "#0d1117",   # Claude Code terminal background
+    "border":      "#30363d",   # separator / outline
+    "titlebar":    "#161b22",   # status bar background
+    "text_white":  "#e6edf3",   # primary text
+    "text_dim":    "#8b949e",   # secondary / response text
+    "text_teal":   "#58a6ff",   # accent (model name)
+    "text_orange": "#f97316",   # accent (mode label)
+    "canvas_bg":   "#000000",   # video canvas fill
 }
 
 _win_dir = os.environ.get("WINDIR", "C:\\Windows")
@@ -38,13 +36,30 @@ SPINNER_CHARS = ["|", "/", "-", "\\"]
 THINK_DURATION = 5.0
 FADE_DURATION = 1.0
 
+ANNOUNCEMENT_LABEL = "ROAD TRIP VÉLO"
 ANNOUNCEMENT_LINES = [
-    "Rennes → Bruxelles",
-    "680 km  ·  5 jours",
-    "14 — 18 mai 2026",
+    "700 KM",
+    "5 JOURS",
+    "À VÉLO.",
 ]
 LINE_DELAY = 0.8
 HANDLE = "@alex.san.dre"
+
+# Schematic route: (city name, fraction along line, dot color, dot radius, label bold)
+ROUTE_CITIES = [
+    ("RENNES",       0.00, "#E8521A", 10, True),
+    ("FLERS",        0.20, "#F06030",  6, False),
+    ("ROUEN",        0.42, "#F08040",  6, False),
+    ("AMIENS",       0.62, "#F09050",  6, False),
+    ("VALENCIENNES", 0.80, "#F0A060",  5, False),
+    ("BRUXELLES",    1.00, "#FFD700", 11, True),
+]
+ANNOUNCEMENT_STATS = [
+    ("700", "km",  "Distance totale"),
+    ("5",   "j",   "Consécutifs"),
+    ("5",   "",    "Étapes"),
+]
+ANNOUNCEMENT_DATE = "14 — 18 MAI  2026"
 
 ROUTE_WAYPOINTS = [
     (48.1173, -1.6778),
